@@ -1,0 +1,383 @@
+openapi: 3.0.0
+info:
+  title: Ktor Hexagonal Multimodule Address Book API
+  version: 0.0.1
+
+paths:
+  /health:
+    get:
+      operationId: getHealth
+      summary: Basic health check
+      parameters:
+        - in: query
+          required: false
+          name: deep
+          description:
+            true if deep health check needs to be performed
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Health check response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestHealthResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+
+  /persons:
+    get:
+      operationId: getAllPersons
+      summary: Get all persons available in database
+      responses:
+        '200':
+          description: List of all persons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RestPersonResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+
+    post:
+      operationId: addPerson
+      summary: Add new person
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestSavePersonRequest'
+      responses:
+        '200':
+          description: Newly created person payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestPersonResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+
+  /persons/{id}:
+    parameters:
+      - in: path
+        name: id
+        description: Person id
+        required: true
+        schema:
+          type: integer
+          format: int64
+    get:
+      operationId: getPersonById
+      summary: Get person by id
+      responses:
+        '200':
+          description: Person
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestPersonResponse'
+        '404':
+          description: No person was found by specified id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+    put:
+      operationId: updatePersonById
+      summary: Update existing person by id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestSavePersonRequest'
+      responses:
+        '200':
+          description: Newly created person payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestPersonResponse'
+        '404':
+          description: No person was found by specified id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+    delete:
+      operationId: deletePersonById
+      summary: Delete person by id
+      responses:
+        '204':
+          description: Operation was successful
+        '404':
+          description: No person was found by specified id
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+
+  /persons/random:
+    post:
+      operationId: addRandomPerson
+      summary: Add new random person
+      responses:
+        '200':
+          description: Newly created person payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestPersonResponse'
+        '4XX':
+          description: Client error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+        '5XX':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestErrorResponse'
+
+components:
+  schemas:
+    RestHealthResponse:
+      type: object
+      description: Organization info item
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          description:
+            overall system health
+        version:
+          type: string
+          description:
+            build version
+        remoteService:
+          type: string
+          description:
+            address book remote service health
+        database:
+          type: string
+          description:
+            database health
+
+    RestPersonResponse:
+      type: object
+      description: Response with person information
+      required:
+        - id
+        - firstName
+        - lastName
+        - phoneNumber
+        - email
+      properties:
+        id:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        gender:
+          $ref: '#/components/schemas/RestGender'
+        age:
+          type: integer
+        phoneNumber:
+          type: string
+        email:
+          type: string
+          format: email
+        postalAddress:
+          $ref: '#/components/schemas/RestPostalAddressResponse'
+
+    RestGender:
+      type: string
+      enum:
+        - male
+        - female
+
+    RestPostalAddressResponse:
+      type: object
+      description: Address
+      required:
+        - address1
+        - city
+        - state
+        - country
+      properties:
+        address1:
+          type: string
+        address2:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+
+    RestSavePersonRequest:
+      type: object
+      description: Request to add/update a person
+      required:
+        - firstName
+        - lastName
+        - phoneNumber
+        - email
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        gender:
+          $ref: '#/components/schemas/RestGender'
+        age:
+          type: integer
+          nullable: true
+        phoneNumber:
+          type: string
+        email:
+          type: string
+          format: email
+        postalAddress:
+          $ref: '#/components/schemas/RestSavePostalAddressRequest'
+
+    RestSavePostalAddressRequest:
+      type: object
+      description: Address
+      required:
+        - address1
+        - city
+        - state
+        - country
+      properties:
+        address1:
+          type: string
+        address2:
+          type: string
+          nullable: true
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+
+    RestErrorResponse:
+      type: object
+      description: Organization info item
+      required:
+        - type
+        - title
+        - status
+        - detail
+      properties:
+        type:
+          type: string
+          description:
+            error type
+        title:
+          type: string
+          description:
+            error title
+        status:
+          type: integer
+          format: int32
+          description:
+            error HTTP status code
+        detail:
+          type: string
+          description:
+            error detail
+        instance:
+          type: string
+          description:
+            error instance
+        specifics:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestErrorSpecificsResponse'
+
+    RestErrorSpecificsResponse:
+      required:
+        - name
+      properties:
+        key:
+          type: string
+        value:
+          type: string
